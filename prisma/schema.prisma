@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,4 +5,121 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+enum Role {
+  user
+  recruter
+}
+
+enum Status {
+  hiring
+  working
+  finding_work
+}
+
+model User {
+  id            String         @id @default(uuid())
+  name          String
+  email         String         @unique
+  role          Role           @default(user)
+  bio           String
+  avatarUrl     String?        @map("avatar_url")
+  status        Status
+  office        String
+  company       String?
+  companyType   String?        @map("company_type")
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  job           Job?
+  links         Link[]
+  skills        Skill[]
+  notifications Notification[]
+
+  @@map("users")
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  title     String
+  content   String
+  userRole  Role     @map("user_role")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @map("user_id")
+
+  @@map("notifications")
+}
+
+enum Seniority {
+  estagiario
+  trainee
+  junior
+  pleno
+  senior
+  especialist
+  tech_lead
+  cordinator
+  gestor
+  diretor
+  CTO
+  CFO
+  CEO
+}
+
+model Job {
+  id          String    @id @default(uuid())
+  name        String
+  area        String
+  seniority   Seniority
+  description String
+  company     String
+  companyUrl  String    @map("company_url")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String  @unique @map("user_id")
+  skills Skill[]
+
+  @@map("jobs")
+}
+
+model Link {
+  id        String   @id @default(uuid())
+  url       String
+  checked   Boolean
+  title     String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @map("user_id")
+
+  @@map("links")
+}
+
+enum Experience {
+  student
+  profissional
+  expert
+}
+
+model Skill {
+  id              String      @id @default(uuid())
+  title           String
+  experienceLevel Experience? @map("experience_level")
+  checked         Boolean     @default(false)
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  job   Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  jobId String @map("job_id")
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @map("user_id")
+
+  @@map("skills")
 }
